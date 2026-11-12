@@ -1,5 +1,5 @@
-const CACHE = 'qr-creator-v2';
-const FILES = ['./', 'index.html', 'qrcode.js', 'manifest.json', 'icon.svg'];
+const CACHE = 'qr-creator-v3';
+const FILES = ['./', 'index.html', 'qrcode.js', 'manifest.json', 'icon.svg', 'logo.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
