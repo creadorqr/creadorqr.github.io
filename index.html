@@ -45,6 +45,21 @@
   #qrBox canvas { width: 100%; height: auto; image-rendering: pixelated; }
   #placeholder { color: #9ca3af; text-align: center; font-size: .95rem; }
   #msg { min-height: 1.2em; margin-top: 10px; font-size: .9rem; color: #fca5a5; text-align: center; }
+
+  /* PC: todo más compacto */
+  @media (min-width: 768px) {
+    body { padding: 16px; }
+    h1 { font-size: 1.2rem; margin: 4px 0 12px; }
+    .card { max-width: 320px; padding: 14px; border-radius: 12px; }
+    label { font-size: .78rem; }
+    input[type=text] { padding: 8px 10px; font-size: .85rem; margin-top: 4px; border-radius: 8px; }
+    label[for=url] { margin-top: 10px !important; }
+    #qrBox { margin-top: 12px; padding: 10px; border-radius: 10px; width: 220px; margin-left: auto; margin-right: auto; }
+    #placeholder { font-size: .8rem; }
+    #msg { margin-top: 6px; font-size: .8rem; }
+    .row { margin-top: 8px; gap: 8px; }
+    button { padding: 8px; font-size: .85rem; border-radius: 8px; }
+  }
 </style>
 </head>
 <body>
