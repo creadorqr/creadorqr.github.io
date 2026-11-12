@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111827">
+<title>QR Creator</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: #111827; color: #f3f4f6;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 16px;
+  }
+  h1 { font-size: 1.6rem; margin: 8px 0 20px; }
+  .card {
+    width: 100%; max-width: 420px;
+    background: #1f2937; border-radius: 16px; padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  label { font-size: .9rem; color: #9ca3af; }
+  input[type=text] {
+    width: 100%; margin-top: 6px; padding: 14px;
+    font-size: 1rem; border-radius: 10px; border: 1px solid #374151;
+    background: #111827; color: #f3f4f6; outline: none;
+  }
+  input[type=text]:focus { border-color: #3b82f6; }
+  .row { display: flex; gap: 10px; margin-top: 14px; }
+  button {
+    flex: 1; padding: 13px; font-size: 1rem; font-weight: 600;
+    border: 0; border-radius: 10px; cursor: pointer;
+    background: #3b82f6; color: white;
+  }
+  button.secondary { background: #374151; }
+  button:disabled { opacity: .4; cursor: default; }
+  #qrBox {
+    margin-top: 20px; background: white; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    aspect-ratio: 1 / 1; padding: 16px;
+  }
+  #qrBox canvas { width: 100%; height: auto; image-rendering: pixelated; }
+  #placeholder { color: #9ca3af; text-align: center; font-size: .95rem; }
+  #msg { min-height: 1.2em; margin-top: 10px; font-size: .9rem; color: #fca5a5; text-align: center; }
+</style>
+</head>
+<body>
+  <h1>QR Creator</h1>
+  <div class="card">
+    <label for="url">Pegá el link</label>
+    <input id="url" type="text" inputmode="url" autocomplete="off" placeholder="https://ejemplo.com">
+    <div id="qrBox"><div id="placeholder">El QR aparece acá</div></div>
+    <div id="msg"></div>
+    <div class="row">
+      <button id="download" disabled>Descargar PNG</button>
+      <button id="share" class="secondary" disabled>Compartir</button>
+    </div>
+  </div>
+
+<script src="qrcode.js"></script>
+<script>
+  const input = document.getElementById('url');
+  const box = document.getElementById('qrBox');
+  const msg = document.getElementById('msg');
+  const btnDownload = document.getElementById('download');
+  const btnShare = document.getElementById('share');
+  let canvas = null;
+
+  function render() {
+    const text = input.value.trim();
+    msg.textContent = '';
+    if (!text) {
+      box.innerHTML = '<div id="placeholder">El QR aparece acá</div>';
+      canvas = null; btnDownload.disabled = btnShare.disabled = true;
+      return;
+    }
+    let qr;
+    try {
+      qr = qrcode(0, 'M');
+      qr.addData(unescape(encodeURIComponent(text)), 'Byte');
+      qr.make();
+    } catch (e) {
+      msg.textContent = 'El texto es demasiado largo para un QR.';
+      return;
+    }
+    const n = qr.getModuleCount();
+    const quiet = 4, scale = Math.max(4, Math.floor(1024 / (n + quiet * 2)));
+    const size = (n + quiet * 2) * scale;
+    canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#000';
+    for (let r = 0; r < n; r++)
+      for (let c = 0; c < n; c++)
+        if (qr.isDark(r, c)) ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+    box.innerHTML = ''; box.appendChild(canvas);
+    btnDownload.disabled = false;
+    btnShare.disabled = !(navigator.canShare);
+  }
+
+  function getBlob() {
+    return new Promise(res => canvas.toBlob(res, 'image/png'));
+  }
+
+  btnDownload.onclick = async () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(await getBlob());
+    a.download = 'qr.png';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+
+  btnShare.onclick = async () => {
+    const file = new File([await getBlob()], 'qr.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: 'Código QR' }); } catch (e) {}
+    } else {
+      msg.textContent = 'Tu navegador no permite compartir imágenes.';
+    }
+  };
+
+  input.addEventListener('input', render);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+</script>
+</body>
+</html>
