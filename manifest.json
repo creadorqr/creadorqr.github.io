@@ -1,5 +1,5 @@
 {
-  "name": "QR Creator",
+  "name": "QR Generator",
   "short_name": "QR",
   "start_url": "./",
   "display": "standalone",

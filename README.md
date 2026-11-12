@@ -1,4 +1,4 @@
-# QR Creator
+# QR Generator
 
 App web simple para crear códigos QR: pegás un link y aparece el QR al instante.
 

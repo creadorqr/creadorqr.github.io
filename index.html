@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111827">
-<title>QR Creator</title>
+<title>QR Generator</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
@@ -17,7 +17,7 @@
     padding: 24px 16px;
   }
   h1 { font-size: 1.6rem; margin: 8px 0 20px; line-height: 0; }
-  .logo { width: 280px; max-width: 80vw; height: auto; }
+  .logo { width: 300px; max-width: 80vw; height: auto; }
   .card {
     width: 100%; max-width: 420px;
     background: #1f2937; border-radius: 16px; padding: 20px;
@@ -51,7 +51,7 @@
   @media (min-width: 768px) {
     body { padding: 16px; justify-content: center; }
     h1 { font-size: 1.4rem; margin: 0 0 16px; }
-    .logo { width: 300px; }
+    .logo { width: 330px; }
     .card { max-width: 380px; padding: 18px; border-radius: 14px; }
     label { font-size: .85rem; }
     input[type=text] { padding: 10px 12px; font-size: .95rem; margin-top: 5px; border-radius: 9px; }
@@ -65,7 +65,7 @@
 </style>
 </head>
 <body>
-  <h1><img src="logo.png" alt="QR Creator" class="logo"></h1>
+  <h1><img src="logo.png" alt="QR Generator" class="logo"></h1>
   <div class="card">
     <label for="name">Nombre del proyecto</label>
     <input id="name" type="text" autocomplete="off" placeholder="Ej: Mi tienda online">
