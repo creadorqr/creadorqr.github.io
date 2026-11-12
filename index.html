@@ -50,7 +50,9 @@
 <body>
   <h1>QR Creator</h1>
   <div class="card">
-    <label for="url">Pegá el link</label>
+    <label for="name">Nombre del proyecto</label>
+    <input id="name" type="text" autocomplete="off" placeholder="Ej: Menú Picania">
+    <label for="url" style="display:block;margin-top:14px">Pegá el link</label>
     <input id="url" type="text" inputmode="url" autocomplete="off" placeholder="https://ejemplo.com">
     <div id="qrBox"><div id="placeholder">El QR aparece acá</div></div>
     <div id="msg"></div>
@@ -102,6 +104,20 @@
     btnShare.disabled = !(navigator.canShare);
   }
 
+  const nameInput = document.getElementById('name');
+
+  // Nombre del archivo: el nombre del proyecto, o si está vacío, el dominio del link
+  function fileName() {
+    let base = nameInput.value.trim();
+    if (!base) {
+      try { base = new URL(input.value.trim()).hostname.replace(/^www\./, ''); }
+      catch (e) { base = ''; }
+    }
+    base = base.normalize('NFD').replace(/[̀-ͯ]/g, '')
+               .replace(/[^\w.\- ]+/g, '').trim().replace(/\s+/g, '-');
+    return 'QR-' + (base || 'codigo') + '.png';
+  }
+
   function getBlob() {
     return new Promise(res => canvas.toBlob(res, 'image/png'));
   }
@@ -109,15 +125,15 @@
   btnDownload.onclick = async () => {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(await getBlob());
-    a.download = 'qr.png';
+    a.download = fileName();
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   };
 
   btnShare.onclick = async () => {
-    const file = new File([await getBlob()], 'qr.png', { type: 'image/png' });
+    const file = new File([await getBlob()], fileName(), { type: 'image/png' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file], title: 'Código QR' }); } catch (e) {}
+      try { await navigator.share({ files: [file], title: nameInput.value.trim() || 'Código QR' }); } catch (e) {}
     } else {
       msg.textContent = 'Tu navegador no permite compartir imágenes.';
     }

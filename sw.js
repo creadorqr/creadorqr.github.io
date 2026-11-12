@@ -1,4 +1,4 @@
-const CACHE = 'qr-creator-v1';
+const CACHE = 'qr-creator-v2';
 const FILES = ['./', 'index.html', 'qrcode.js', 'manifest.json', 'icon.svg'];
 
 self.addEventListener('install', e => {
@@ -13,5 +13,12 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+  // Primero la red (para tener siempre la última versión), si no hay conexión usa la copia guardada
+  e.respondWith(
+    fetch(e.request).then(res => {
+      const copy = res.clone();
+      caches.open(CACHE).then(c => c.put(e.request, copy));
+      return res;
+    }).catch(() => caches.match(e.request))
+  );
 });
