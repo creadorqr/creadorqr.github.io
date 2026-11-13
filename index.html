@@ -69,6 +69,26 @@
   footer a:hover { color: #39ff14; }
   footer .nw { white-space: nowrap; }
   footer svg { width: 13px; height: 13px; }
+  /* Celular: todo entra en una sola pantalla (probado para Samsung A16) */
+  @media (max-width: 767px) {
+    body { min-height: 100dvh; padding: 12px 14px; justify-content: center; }
+    h1 { margin: 0 0 10px; }
+    .logo { width: 230px; }
+    .card { padding: 14px; border-radius: 14px; }
+    label { font-size: .82rem; }
+    input[type=text] { padding: 10px 12px; font-size: 16px; margin-top: 4px; border-radius: 9px; }
+    label[for=url] { margin-top: 8px !important; }
+    #qrBox {
+      margin: 10px auto 0; padding: 8px; border-radius: 10px;
+      width: min(100%, calc(100dvh - 420px)); min-width: 160px;
+    }
+    #placeholder { font-size: .85rem; }
+    #msg { min-height: 0; margin-top: 4px; font-size: .8rem; }
+    #msg:empty { display: none; }
+    .row { margin-top: 10px; }
+    button { padding: 11px; font-size: .95rem; border-radius: 9px; }
+    footer { margin-top: 10px; font-size: .7rem; line-height: 1.5; }
+  }
 </style>
 </head>
 <body>
