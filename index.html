@@ -64,9 +64,11 @@
     .row { margin-top: 8px; gap: 10px; }
     button { padding: 10px; font-size: .95rem; border-radius: 9px; }
   }
-  footer a { color: inherit; text-decoration: none; }
+  footer { margin-top: 22px; text-align: center; color: #6b7280; font-size: .78rem; line-height: 1.7; letter-spacing: .3px; }
+  footer a { color: #9ca3af; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; transition: color .2s; }
   footer a:hover { color: #39ff14; }
-  footer { margin-top: 18px; font-size: .8rem; color: #6b7280; letter-spacing: .5px; text-align: center; }
+  footer .nw { white-space: nowrap; }
+  footer svg { width: 13px; height: 13px; }
 </style>
 </head>
 <body>
@@ -84,10 +86,17 @@
     </div>
   </div>
 
-  <footer><a href="https://www.instagram.com/uskaeragenciadigital/" target="_blank" rel="noopener">Uskaer Technologies</a></footer>
+  <footer>
+    <div><span class="nw">&copy; <span id="year">2026</span> Uskaer Technologies.</span> <span class="nw">Todos los derechos reservados.</span></div>
+    <div>Diseño y desarrollo por
+      <a href="https://www.instagram.com/uskaeragenciadigital/" target="_blank" rel="noopener" aria-label="Instagram de Uskaer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>Uskaer</a>
+    </div>
+  </footer>
 
 <script src="qrcode.js"></script>
 <script>
+  document.getElementById('year').textContent = new Date().getFullYear();
   const input = document.getElementById('url');
   const box = document.getElementById('qrBox');
   const msg = document.getElementById('msg');
