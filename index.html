@@ -141,22 +141,23 @@
   let canvas = null;
 
   // Paleta de colores (como Instagram): sólidos y degradados, todos legibles sobre blanco
+  // Mismos colores que el QR de Instagram (degradados de abajo-izquierda a arriba-derecha)
   const PALETTE = [
-    ['#000000'],                // negro clásico
-    ['#111827'],                // azul noche (fondo de la app)
-    ['#15803d'],                // verde Uskaer (versión oscura del flúor, legible)
-    ['#111827', '#15803d'],     // noche → verde
-    ['#1d4ed8'],                // azul
-    ['#1d4ed8', '#7e22ce'],     // azul → violeta
-    ['#7e22ce'],                // violeta
-    ['#b91c1c']                 // rojo
+    ['#000000'],                // negro
+    ['#45bff3', '#258eda'],     // celeste
+    ['#3f9fea', '#8830c7'],     // azul → violeta
+    ['#5dc17b', '#3ac3ca'],     // verde → turquesa
+    ['#5f5f5f', '#3a3a3a'],     // gris
+    ['#e86d53', '#bd2d94'],     // naranja → rosa
+    ['#de0f8d', '#9b2ad4'],     // fucsia → violeta
+    ['#0866ff']                 // azul
   ];
   let color = PALETTE[0];
   const swBox = document.getElementById('swatches');
   PALETTE.forEach((c, i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'sw' + (i === 0 ? ' active' : '');
-    b.style.background = c.length > 1 ? `linear-gradient(135deg, ${c[0]}, ${c[1]})` : c[0];
+    b.style.background = c.length > 1 ? `linear-gradient(45deg, ${c[0]}, ${c[1]})` : c[0];
     b.setAttribute('aria-label', 'Color ' + (i + 1));
     b.onclick = () => {
       color = c;
@@ -210,7 +211,7 @@
     // Color de los puntos: sólido o degradado
     let fill = color[0];
     if (color.length > 1) {
-      fill = ctx.createLinearGradient(0, 0, W, H);
+      fill = ctx.createLinearGradient(0, H, W, 0);
       fill.addColorStop(0, color[0]); fill.addColorStop(1, color[1]);
     }
     ctx.fillStyle = fill;
