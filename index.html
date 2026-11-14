@@ -108,6 +108,19 @@
     .sw { width: 26px; height: 26px; }
     #qrBox { width: min(100%, calc(100dvh - 505px)); }
   }
+  /* PC: todo entra en una pantalla, el QR se ajusta al alto disponible */
+  @media (min-width: 768px) {
+    body { min-height: 100dvh; padding: 10px 16px; }
+    h1 { margin: 0 0 10px; }
+    .card { padding: 14px 18px; }
+    label[for=url] { margin-top: 8px !important; }
+    .swatches { margin-top: 10px; gap: 6px 8px; }
+    #qrBox { margin-top: 10px; width: min(260px, calc((100dvh - 455px) / 1.15)); min-width: 150px; }
+    #msg { min-height: 0; margin-top: 4px; }
+    #msg:empty { display: none; }
+    .row { margin-top: 10px; }
+    footer { margin-top: 10px; line-height: 1.5; }
+  }
 </style>
 </head>
 <body>
