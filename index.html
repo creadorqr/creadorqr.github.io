@@ -93,20 +93,42 @@
     button { padding: 11px; font-size: .95rem; border-radius: 9px; }
     footer { margin-top: 10px; font-size: .7rem; line-height: 1.5; }
   }
+  .colors-toggle {
+    display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 12px;
+    padding: 8px 12px; background: #111827; color: #d1d5db; border: 1px solid #374151;
+    border-radius: 10px; font-size: .9rem; font-weight: 600; cursor: pointer; flex: none;
+  }
+  .colors-toggle:hover { border-color: #4b5563; }
+  .colors-toggle .dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+  .colors-toggle .chev { margin-left: auto; transition: transform .2s; color: #9ca3af; }
+  .colors-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  .swatches[hidden] { display: none !important; }
   .swatches { display: grid; grid-template-columns: repeat(8, 28px); justify-content: center; gap: 8px; margin-top: 12px; }
   .sw {
-    width: 28px; height: 28px; border-radius: 50%; padding: 0; flex: none;
-    border: 2px solid transparent; outline: 2px solid transparent; outline-offset: 1px;
-    cursor: pointer; transition: transform .15s; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+    width: 28px; height: 28px; border-radius: 50%; padding: 0; flex: none; position: relative;
+    border: 2px solid rgba(255,255,255,.9);
+    box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    cursor: pointer; transition: transform .15s, box-shadow .15s;
   }
-  .sw:hover { transform: scale(1.1); }
-  .sw.active { border-color: #1f2937; outline-color: #39ff14; }
+  .sw:hover { transform: translateY(-2px) scale(1.08); }
+  .sw.active {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px #1f2937, 0 0 0 4px #39ff14, 0 0 12px rgba(57,255,20,.45);
+  }
+  .sw.active::after {   /* tilde blanco en el color elegido */
+    content: ""; position: absolute; left: 50%; top: 45%; width: 6px; height: 11px;
+    border: solid #fff; border-width: 0 2.5px 2.5px 0;
+    transform: translate(-50%, -50%) rotate(45deg);
+    filter: drop-shadow(0 0 1px rgba(0,0,0,.6));
+  }
   #qrBox.has-qr { background: none; padding: 0; aspect-ratio: auto; }
   #qrBox.has-qr canvas { border-radius: 14px; image-rendering: auto; }
   @media (max-width: 767px) {
     .swatches { margin-top: 8px; gap: 6px 8px; grid-template-columns: repeat(8, 26px); }
     .sw { width: 26px; height: 26px; }
-    #qrBox { width: min(100%, calc(100dvh - 505px)); }
+    #qrBox { width: min(100%, calc(100dvh - 445px)); }
+    .colors-toggle { margin-top: 8px; padding: 7px 12px; }
+    body.colors-open #qrBox { width: min(100%, calc(100dvh - 515px)); }
   }
   /* PC: todo entra en una pantalla, el QR se ajusta al alto disponible */
   @media (min-width: 768px) {
@@ -115,7 +137,9 @@
     .card { padding: 14px 18px; }
     label[for=url] { margin-top: 8px !important; }
     .swatches { margin-top: 10px; gap: 6px 8px; }
-    #qrBox { margin-top: 10px; width: min(260px, calc((100dvh - 455px) / 1.15)); min-width: 150px; }
+    #qrBox { margin-top: 10px; width: min(260px, calc((100dvh - 420px) / 1.15)); min-width: 150px; }
+    .colors-toggle { margin-top: 10px; padding: 6px 12px; font-size: .85rem; }
+    body.colors-open #qrBox { width: min(260px, calc((100dvh - 490px) / 1.15)); min-width: 130px; }
     #msg { min-height: 0; margin-top: 4px; }
     #msg:empty { display: none; }
     .row { margin-top: 10px; }
@@ -130,7 +154,10 @@
     <input id="name" type="text" autocomplete="off" placeholder="Ej: Mi tienda online">
     <label for="url" style="display:block;margin-top:14px">Pegá el link</label>
     <input id="url" type="text" inputmode="url" autocomplete="off" placeholder="https://ejemplo.com">
-    <div class="swatches" id="swatches" aria-label="Color del QR"></div>
+    <button type="button" class="colors-toggle" id="colorsToggle" aria-expanded="false" aria-controls="swatches">
+      <span class="dot" id="colorDot"></span>Colours<svg class="chev" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="swatches" id="swatches" aria-label="Color del QR" hidden></div>
     <div id="qrBox"><div id="placeholder">El QR aparece acá</div></div>
     <div id="msg"></div>
     <div class="row">
@@ -185,7 +212,7 @@
     b.style.background = c.length > 1 ? `linear-gradient(45deg, ${c.join(', ')})` : c[0];
     b.setAttribute('aria-label', 'Color ' + (i + 1));
     b.onclick = () => {
-      color = c;
+      color = c; paintDot();
       swBox.querySelectorAll('.sw').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
       render();
@@ -194,6 +221,21 @@
   });
 
   // Agrega un rectángulo redondeado al trazo actual (sin abrir uno nuevo)
+  // Barra "Colours": abre y cierra la paleta; el circulito muestra el color elegido
+  const toggle = document.getElementById('colorsToggle');
+  const dot = document.getElementById('colorDot');
+  function paintDot() {
+    dot.style.background = color.length > 1 ? `linear-gradient(45deg, ${color.join(', ')})` : color[0];
+  }
+  paintDot();
+  toggle.onclick = () => {
+    const open = swBox.hidden;
+    swBox.hidden = !open;
+    toggle.setAttribute('aria-expanded', open);
+    document.body.classList.toggle('colors-open', open);
+    if (current) render();   // el QR cambia de tamaño para que todo siga entrando en pantalla
+  };
+
   function roundPath(ctx, x, y, w, h, r) {
     ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
     ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
