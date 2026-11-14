@@ -8,6 +8,10 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <style>
+  @font-face {
+    font-family: "Barlow Condensed"; font-weight: 600; font-display: swap;
+    src: url("fonts/barlow-condensed-600.woff2") format("woff2");
+  }
   * { box-sizing: border-box; }
   body {
     margin: 0; min-height: 100vh;
@@ -197,7 +201,7 @@
     const quiet = 4, scale = Math.max(4, Math.floor(1024 / (n + quiet * 2)));
     const W = (n + quiet * 2) * scale;
     const label = nameInput.value.trim().toUpperCase();
-    const textH = label ? Math.round(W * 0.13) : 0;
+    const textH = label ? Math.round(W * 0.15) : 0;
     const H = W + textH;
 
     canvas = document.createElement('canvas');
@@ -221,12 +225,18 @@
 
     // Nombre del proyecto debajo del QR
     if (label) {
-      let fs = Math.round(textH * 0.62);
+      let fs = Math.round(textH * 0.78);
       const maxW = W - quiet * scale * 2;
-      const font = sz => `800 ${sz}px "Arial Narrow", "Roboto Condensed", system-ui, sans-serif`;
+      const font = sz => `600 ${sz}px "Barlow Condensed", "Arial Narrow", sans-serif`;
       ctx.font = font(fs);
       while (ctx.measureText(label).width > maxW && fs > 10) { fs -= 2; ctx.font = font(fs); }
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      if (color.length > 1) {   // en el título el degradado va de izquierda a derecha, como en Instagram
+        const tw = ctx.measureText(label).width;
+        const tg = ctx.createLinearGradient(W / 2 - tw / 2, 0, W / 2 + tw / 2, 0);
+        tg.addColorStop(0, color[0]); tg.addColorStop(1, color[1]);
+        ctx.fillStyle = tg;
+      }
       ctx.fillText(label, W / 2, W - quiet * scale * 0.35 + textH / 2);
     }
 
@@ -273,6 +283,8 @@
 
   input.addEventListener('input', render);
   nameInput.addEventListener('input', render);
+  // Cuando termina de cargar la fuente del título, redibuja el QR
+  document.fonts.load('600 40px "Barlow Condensed"').then(render).catch(() => {});
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});

@@ -1,5 +1,5 @@
-const CACHE = 'qr-generator-v6';
-const FILES = ['./', 'index.html', 'qrcode.js', 'manifest.json', 'icon.svg', 'logo.png'];
+const CACHE = 'qr-generator-v7';
+const FILES = ['./', 'index.html', 'qrcode.js', 'manifest.json', 'icon.svg', 'logo.png', 'fonts/barlow-condensed-600.woff2'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)));
