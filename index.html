@@ -99,21 +99,21 @@
     border-radius: 10px; font-size: .9rem; font-weight: 600; cursor: pointer; flex: none;
   }
   .colors-toggle:hover { border-color: #4b5563; }
-  .colors-toggle .dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+  .colors-toggle .dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
   .colors-toggle .chev { margin-left: auto; transition: transform .2s; color: #9ca3af; }
   .colors-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
   .swatches[hidden] { display: none !important; }
   .swatches { display: grid; grid-template-columns: repeat(8, 28px); justify-content: center; gap: 8px; margin-top: 12px; }
   .sw {
     width: 28px; height: 28px; border-radius: 50%; padding: 0; flex: none; position: relative;
-    border: 2px solid rgba(255,255,255,.9);
-    box-shadow: 0 2px 6px rgba(0,0,0,.35);
+    border: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,.4);
     cursor: pointer; transition: transform .15s, box-shadow .15s;
   }
   .sw:hover { transform: translateY(-2px) scale(1.08); }
   .sw.active {
     transform: scale(1.1);
-    box-shadow: 0 0 0 2px #1f2937, 0 0 0 4px #39ff14, 0 0 12px rgba(57,255,20,.45);
+    box-shadow: 0 0 0 3px #1f2937, 0 0 0 5px #39ff14, 0 0 14px rgba(57,255,20,.4);
   }
   .sw.active::after {   /* tilde blanco en el color elegido */
     content: ""; position: absolute; left: 50%; top: 45%; width: 6px; height: 11px;
