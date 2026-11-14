@@ -179,34 +179,15 @@
     ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
   }
 
-  function render() {
-    const text = input.value.trim();
-    msg.textContent = '';
-    if (!text) {
-      box.classList.remove('has-qr');
-      box.innerHTML = '<div id="placeholder">El QR aparece acá</div>';
-      canvas = null; btnDownload.disabled = btnShare.disabled = true;
-      return;
-    }
-    let qr;
-    try {
-      qr = qrcode(0, 'M');
-      qr.addData(unescape(encodeURIComponent(text)), 'Byte');
-      qr.make();
-    } catch (e) {
-      msg.textContent = 'El texto es demasiado largo para un QR.';
-      return;
-    }
-    const n = qr.getModuleCount();
-    const quiet = 4, scale = Math.max(4, Math.floor(1024 / (n + quiet * 2)));
-    const W = (n + quiet * 2) * scale;
-    const label = nameInput.value.trim().toUpperCase();
+  // Dibuja la tarjeta (QR + título) al tamaño exacto pedido, para que siempre se vea nítida
+  function drawCard(qr, label, size) {
+    const n = qr.getModuleCount(), quiet = 4;
+    const W = Math.round(size), m = W / (n + quiet * 2);   // tamaño de cada módulo (puede tener decimales)
     const textH = label ? Math.round(W * 0.15) : 0;
     const H = W + textH;
-
-    canvas = document.createElement('canvas');
-    canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext('2d');
+    const cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d');
 
     // Tarjeta blanca con bordes redondeados
     ctx.fillStyle = '#fff';
@@ -219,17 +200,18 @@
       fill.addColorStop(0, color[0]); fill.addColorStop(1, color[1]);
     }
     ctx.fillStyle = fill;
+    const px = i => Math.round((i + quiet) * m);   // bordes en píxeles enteros: sin borroneo ni líneas finas
     for (let r = 0; r < n; r++)
       for (let c = 0; c < n; c++)
-        if (qr.isDark(r, c)) ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+        if (qr.isDark(r, c)) ctx.fillRect(px(c), px(r), px(c + 1) - px(c), px(r + 1) - px(r));
 
     // Nombre del proyecto debajo del QR
     if (label) {
       let fs = Math.round(textH * 0.78);
-      const maxW = W - quiet * scale * 2;
+      const maxW = W - quiet * m * 2;
       const font = sz => `600 ${sz}px "Barlow Condensed", "Arial Narrow", sans-serif`;
       ctx.font = font(fs);
-      while (ctx.measureText(label).width > maxW && fs > 10) { fs -= 2; ctx.font = font(fs); }
+      while (ctx.measureText(label).width > maxW && fs > 8) { fs -= 1; ctx.font = font(fs); }
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       if (color.length > 1) {   // en el título el degradado va de izquierda a derecha, como en Instagram
         const tw = ctx.measureText(label).width;
@@ -237,14 +219,43 @@
         tg.addColorStop(0, color[0]); tg.addColorStop(1, color[1]);
         ctx.fillStyle = tg;
       }
-      ctx.fillText(label, W / 2, W - quiet * scale * 0.35 + textH / 2);
+      ctx.fillText(label, W / 2, W - quiet * m * 0.35 + textH / 2);
     }
+    return cv;
+  }
 
+  let current = null;   // QR actual (para volver a dibujarlo en alta para descargar)
+
+  function render() {
+    const text = input.value.trim();
+    msg.textContent = '';
+    if (!text) {
+      box.classList.remove('has-qr');
+      box.innerHTML = '<div id="placeholder">El QR aparece acá</div>';
+      canvas = current = null; btnDownload.disabled = btnShare.disabled = true;
+      return;
+    }
+    let qr;
+    try {
+      qr = qrcode(0, 'M');
+      qr.addData(unescape(encodeURIComponent(text)), 'Byte');
+      qr.make();
+    } catch (e) {
+      msg.textContent = 'El texto es demasiado largo para un QR.';
+      return;
+    }
+    current = { qr, label: nameInput.value.trim().toUpperCase() };
+
+    // Vista previa: al tamaño real de la pantalla (ancho visible × densidad de píxeles)
     box.classList.add('has-qr');
+    const cssW = box.clientWidth || 280;
+    canvas = drawCard(qr, current.label, cssW * (window.devicePixelRatio || 1));
+    canvas.style.width = cssW + 'px';
     box.innerHTML = ''; box.appendChild(canvas);
     btnDownload.disabled = false;
     btnShare.disabled = !(navigator.canShare);
   }
+
 
   const nameInput = document.getElementById('name');
 
@@ -260,8 +271,10 @@
     return 'QR-' + (base || 'codigo') + '.png';
   }
 
+  // El PNG descargado se dibuja en alta resolución (2048 px)
   function getBlob() {
-    return new Promise(res => canvas.toBlob(res, 'image/png'));
+    const hi = drawCard(current.qr, current.label, 2048);
+    return new Promise(res => hi.toBlob(res, 'image/png'));
   }
 
   btnDownload.onclick = async () => {
@@ -283,6 +296,7 @@
 
   input.addEventListener('input', render);
   nameInput.addEventListener('input', render);
+  window.addEventListener('resize', () => { if (current) render(); });
   // Cuando termina de cargar la fuente del título, redibuja el QR
   document.fonts.load('600 40px "Barlow Condensed"').then(render).catch(() => {});
 
