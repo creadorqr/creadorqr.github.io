@@ -1,4 +1,4 @@
-const CACHE = 'qr-generator-v4';
+const CACHE = 'qr-generator-v5';
 const FILES = ['./', 'index.html', 'qrcode.js', 'manifest.json', 'icon.svg', 'logo.png'];
 
 self.addEventListener('install', e => {

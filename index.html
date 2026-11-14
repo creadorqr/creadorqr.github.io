@@ -89,6 +89,21 @@
     button { padding: 11px; font-size: .95rem; border-radius: 9px; }
     footer { margin-top: 10px; font-size: .7rem; line-height: 1.5; }
   }
+  .swatches { display: flex; justify-content: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .sw {
+    width: 28px; height: 28px; border-radius: 50%; padding: 0; flex: none;
+    border: 2px solid transparent; outline: 2px solid transparent; outline-offset: 1px;
+    cursor: pointer; transition: transform .15s; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+  }
+  .sw:hover { transform: scale(1.1); }
+  .sw.active { border-color: #1f2937; outline-color: #39ff14; }
+  #qrBox.has-qr { background: none; padding: 0; aspect-ratio: auto; }
+  #qrBox.has-qr canvas { border-radius: 14px; image-rendering: auto; }
+  @media (max-width: 767px) {
+    .swatches { margin-top: 8px; gap: 7px; }
+    .sw { width: 26px; height: 26px; }
+    #qrBox { width: min(100%, calc(100dvh - 470px)); }
+  }
 </style>
 </head>
 <body>
@@ -98,6 +113,7 @@
     <input id="name" type="text" autocomplete="off" placeholder="Ej: Mi tienda online">
     <label for="url" style="display:block;margin-top:14px">Pegá el link</label>
     <input id="url" type="text" inputmode="url" autocomplete="off" placeholder="https://ejemplo.com">
+    <div class="swatches" id="swatches" aria-label="Color del QR"></div>
     <div id="qrBox"><div id="placeholder">El QR aparece acá</div></div>
     <div id="msg"></div>
     <div class="row">
@@ -124,10 +140,45 @@
   const btnShare = document.getElementById('share');
   let canvas = null;
 
+  // Paleta de colores (como Instagram): sólidos y degradados, todos legibles sobre blanco
+  const PALETTE = [
+    ['#000000'],                // negro clásico
+    ['#111827'],                // azul noche (fondo de la app)
+    ['#15803d'],                // verde Uskaer (versión oscura del flúor, legible)
+    ['#111827', '#15803d'],     // noche → verde
+    ['#1d4ed8'],                // azul
+    ['#1d4ed8', '#7e22ce'],     // azul → violeta
+    ['#7e22ce'],                // violeta
+    ['#b91c1c']                 // rojo
+  ];
+  let color = PALETTE[0];
+  const swBox = document.getElementById('swatches');
+  PALETTE.forEach((c, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'sw' + (i === 0 ? ' active' : '');
+    b.style.background = c.length > 1 ? `linear-gradient(135deg, ${c[0]}, ${c[1]})` : c[0];
+    b.setAttribute('aria-label', 'Color ' + (i + 1));
+    b.onclick = () => {
+      color = c;
+      swBox.querySelectorAll('.sw').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      render();
+    };
+    swBox.appendChild(b);
+  });
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+
   function render() {
     const text = input.value.trim();
     msg.textContent = '';
     if (!text) {
+      box.classList.remove('has-qr');
       box.innerHTML = '<div id="placeholder">El QR aparece acá</div>';
       canvas = null; btnDownload.disabled = btnShare.disabled = true;
       return;
@@ -143,15 +194,42 @@
     }
     const n = qr.getModuleCount();
     const quiet = 4, scale = Math.max(4, Math.floor(1024 / (n + quiet * 2)));
-    const size = (n + quiet * 2) * scale;
+    const W = (n + quiet * 2) * scale;
+    const label = nameInput.value.trim().toUpperCase();
+    const textH = label ? Math.round(W * 0.13) : 0;
+    const H = W + textH;
+
     canvas = document.createElement('canvas');
-    canvas.width = canvas.height = size;
+    canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
-    ctx.fillStyle = '#000';
+
+    // Tarjeta blanca con bordes redondeados
+    ctx.fillStyle = '#fff';
+    roundRect(ctx, 0, 0, W, H, W * 0.06); ctx.fill();
+
+    // Color de los puntos: sólido o degradado
+    let fill = color[0];
+    if (color.length > 1) {
+      fill = ctx.createLinearGradient(0, 0, W, H);
+      fill.addColorStop(0, color[0]); fill.addColorStop(1, color[1]);
+    }
+    ctx.fillStyle = fill;
     for (let r = 0; r < n; r++)
       for (let c = 0; c < n; c++)
         if (qr.isDark(r, c)) ctx.fillRect((c + quiet) * scale, (r + quiet) * scale, scale, scale);
+
+    // Nombre del proyecto debajo del QR
+    if (label) {
+      let fs = Math.round(textH * 0.62);
+      const maxW = W - quiet * scale * 2;
+      const font = sz => `800 ${sz}px "Arial Narrow", "Roboto Condensed", system-ui, sans-serif`;
+      ctx.font = font(fs);
+      while (ctx.measureText(label).width > maxW && fs > 10) { fs -= 2; ctx.font = font(fs); }
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(label, W / 2, W - quiet * scale * 0.35 + textH / 2);
+    }
+
+    box.classList.add('has-qr');
     box.innerHTML = ''; box.appendChild(canvas);
     btnDownload.disabled = false;
     btnShare.disabled = !(navigator.canShare);
@@ -193,6 +271,7 @@
   };
 
   input.addEventListener('input', render);
+  nameInput.addEventListener('input', render);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js').catch(() => {});
