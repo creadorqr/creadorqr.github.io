@@ -93,7 +93,7 @@
     button { padding: 11px; font-size: .95rem; border-radius: 9px; }
     footer { margin-top: 10px; font-size: .7rem; line-height: 1.5; }
   }
-  .swatches { display: flex; justify-content: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .swatches { display: grid; grid-template-columns: repeat(8, 28px); justify-content: center; gap: 8px; margin-top: 12px; }
   .sw {
     width: 28px; height: 28px; border-radius: 50%; padding: 0; flex: none;
     border: 2px solid transparent; outline: 2px solid transparent; outline-offset: 1px;
@@ -104,9 +104,9 @@
   #qrBox.has-qr { background: none; padding: 0; aspect-ratio: auto; }
   #qrBox.has-qr canvas { border-radius: 14px; image-rendering: auto; }
   @media (max-width: 767px) {
-    .swatches { margin-top: 8px; gap: 7px; }
+    .swatches { margin-top: 8px; gap: 6px 8px; grid-template-columns: repeat(8, 26px); }
     .sw { width: 26px; height: 26px; }
-    #qrBox { width: min(100%, calc(100dvh - 470px)); }
+    #qrBox { width: min(100%, calc(100dvh - 505px)); }
   }
 </style>
 </head>
@@ -154,14 +154,22 @@
     ['#5f5f5f', '#3a3a3a'],     // gris
     ['#e86d53', '#bd2d94'],     // naranja → rosa
     ['#de0f8d', '#9b2ad4'],     // fucsia → violeta
-    ['#0866ff']                 // azul
+    ['#0866ff'],                // azul
+    ['#dc2626'],                // rojo
+    ['#f59e0b', '#ea580c'],     // ámbar → naranja
+    ['#15803d'],                // verde
+    ['#0f766e'],                // verde petróleo
+    ['#1e3a8a', '#7c3aed'],     // azul marino → violeta
+    ['#7c3aed'],                // violeta
+    ['#92400e'],                // marrón
+    ['#f58529', '#dd2a7b', '#8134af']   // degradado del logo de Instagram
   ];
   let color = PALETTE[0];
   const swBox = document.getElementById('swatches');
   PALETTE.forEach((c, i) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'sw' + (i === 0 ? ' active' : '');
-    b.style.background = c.length > 1 ? `linear-gradient(45deg, ${c[0]}, ${c[1]})` : c[0];
+    b.style.background = c.length > 1 ? `linear-gradient(45deg, ${c.join(', ')})` : c[0];
     b.setAttribute('aria-label', 'Color ' + (i + 1));
     b.onclick = () => {
       color = c;
@@ -204,7 +212,7 @@
     let fill = color[0];
     if (color.length > 1) {
       fill = ctx.createLinearGradient(0, H, W, 0);
-      fill.addColorStop(0, color[0]); fill.addColorStop(1, color[1]);
+      color.forEach((c, i) => fill.addColorStop(i / (color.length - 1), c));
     }
     ctx.fillStyle = fill;
     const px = i => Math.round((i + quiet) * m);   // bordes en píxeles enteros: sin borroneo ni líneas finas
@@ -238,7 +246,7 @@
       if (color.length > 1) {   // en el título el degradado va de izquierda a derecha, como en Instagram
         const tw = ctx.measureText(label).width;
         const tg = ctx.createLinearGradient(W / 2 - tw / 2, 0, W / 2 + tw / 2, 0);
-        tg.addColorStop(0, color[0]); tg.addColorStop(1, color[1]);
+        color.forEach((c, i) => tg.addColorStop(i / (color.length - 1), c));
         ctx.fillStyle = tg;
       }
       ctx.fillText(label, W / 2, W - quiet * m * 0.35 + textH / 2);
