@@ -104,7 +104,7 @@
   .colors-toggle .chev { margin-left: auto; transition: transform .2s; color: #9ca3af; }
   .colors-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
   .swatches[hidden] { display: none !important; }
-  .swatches { display: grid; grid-template-columns: repeat(6, 28px) 8px 28px; justify-content: center; align-items: center; gap: 8px; margin-top: 12px; }
+  .swatches { display: grid; grid-template-columns: auto repeat(6, 28px); justify-content: center; align-items: center; gap: 8px; margin-top: 12px; }
   .sw {
     width: 28px; height: 28px; border-radius: 50%; padding: 0; flex: none; position: relative;
     border: 0;
@@ -122,23 +122,26 @@
     transform: translate(-50%, -50%) rotate(45deg);
     filter: drop-shadow(0 0 1px rgba(0,0,0,.6));
   }
-  .swatches .sep { width: 1px; height: 22px; background: #374151; align-self: center; justify-self: center; }
+  .swatches .rl { font-size: .75rem; color: #9ca3af; text-align: right; padding-right: 4px; }
+  .sw.white { box-shadow: inset 0 0 0 1px #9ca3af, 0 2px 6px rgba(0,0,0,.4); }
+  .sw.white.active::after, .sw.lightgray.active::after { border-color: #111827; filter: none; }
+  #msg.warn { color: #fbbf24; }
   .sw.tool { background: #374151; color: #e5e7eb; display: flex; align-items: center; justify-content: center; overflow: hidden; }
   .sw.tool svg { width: 15px; height: 15px; pointer-events: none; }
   .sw.tool input[type=color] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
-  #bgToggle { background: conic-gradient(#fff 25%, #9ca3af 0 50%, #fff 0 75%, #9ca3af 0) 0 0 / 12px 12px; }
-  #bgToggle.active { box-shadow: 0 0 0 3px #1f2937, 0 0 0 5px #39ff14, 0 0 14px rgba(57,255,20,.4); transform: scale(1.1); }
-  #bgToggle.active::after { border-color: #111827; filter: none; }
+  #noBgBtn { background: conic-gradient(#fff 25%, #9ca3af 0 50%, #fff 0 75%, #9ca3af 0) 0 0 / 12px 12px; }
+  #noBgBtn.active::after { border-color: #111827; filter: none; }
   .sw.tool.active::after { display: none; }
   #qrBox.has-qr { background: none; padding: 0; aspect-ratio: auto; }
   #qrBox.has-qr.nobg canvas { background: conic-gradient(#fff 25%, #e5e7eb 0 50%, #fff 0 75%, #e5e7eb 0) 0 0 / 16px 16px; }
   #qrBox.has-qr canvas { border-radius: 14px; image-rendering: auto; }
   @media (max-width: 767px) {
-    .swatches { margin-top: 8px; gap: 6px 8px; grid-template-columns: repeat(6, 26px) 8px 26px; }
+    .swatches { margin-top: 8px; gap: 6px 8px; grid-template-columns: auto repeat(6, 26px); }
     .sw { width: 26px; height: 26px; }
     #qrBox { width: min(100%, calc(100dvh - 445px)); }
     .colors-toggle { margin-top: 8px; padding: 7px 12px; }
-    body.colors-open #qrBox { width: min(100%, calc(100dvh - 515px)); }
+    body.colors-open #qrBox { width: min(100%, calc(100dvh - 549px)); }
+    body.colors-open.warn #qrBox { width: min(100%, calc(100dvh - 569px)); }
   }
   /* PC: todo entra en una pantalla, el QR se ajusta al alto disponible */
   @media (min-width: 768px) {
@@ -149,7 +152,8 @@
     .swatches { margin-top: 10px; gap: 6px 8px; }
     #qrBox { margin-top: 10px; width: min(260px, calc((100dvh - 420px) / 1.15)); min-width: 150px; }
     .colors-toggle { margin-top: 10px; padding: 6px 12px; font-size: .85rem; }
-    body.colors-open #qrBox { width: min(260px, calc((100dvh - 490px) / 1.15)); min-width: 130px; }
+    body.colors-open #qrBox { width: min(260px, calc((100dvh - 526px) / 1.15)); min-width: 130px; }
+    body.colors-open.warn #qrBox { width: min(260px, calc((100dvh - 546px) / 1.15)); }
     #msg { min-height: 0; margin-top: 4px; }
     #msg:empty { display: none; }
     .row { margin-top: 10px; }
@@ -204,48 +208,51 @@
     ['#f58529', '#dd2a7b', '#8134af']     // degradado de Instagram
   ];
   let color = PALETTE[0];
-  let noBg = false;   // true = sin fondo blanco (PNG transparente)
+  let bg = '#ffffff';   // color del fondo; null = sin fondo (PNG transparente)
   const swBox = document.getElementById('swatches');
-  function selectSw(b) {
-    swBox.querySelectorAll('.sw:not(#bgToggle)').forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-  }
-  PALETTE.forEach((c, i) => {
-    const b = document.createElement('button');
-    b.type = 'button'; b.className = 'sw' + (i === 0 ? ' active' : '');
-    b.style.background = c.length > 1 ? `linear-gradient(45deg, ${c.join(', ')})` : c[0];
-    b.setAttribute('aria-label', 'Color ' + (i + 1));
-    b.onclick = () => { color = c; paintDot(); selectSw(b); render(); };
-    swBox.appendChild(b);
-  });
-
-  // Gotero: elegir cualquier color (en PC el selector trae el gotero para tomar un color de la pantalla)
   const DROP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>';
-  const pick = document.createElement('label');
-  pick.className = 'sw tool'; pick.title = 'Elegir cualquier color';
-  pick.innerHTML = DROP + '<input type="color" value="#000000" aria-label="Elegir cualquier color">';
-  const pickInput = pick.querySelector('input');
-  pickInput.addEventListener('input', () => {
-    const v = pickInput.value;
-    color = [v]; paintDot(); selectSw(pick);
-    pick.style.background = v;
-    const lum = parseInt(v.slice(1, 3), 16) * .299 + parseInt(v.slice(3, 5), 16) * .587 + parseInt(v.slice(5, 7), 16) * .114;
-    pick.style.color = lum > 150 ? '#111827' : '#fff';
-    render();
-  });
-  swBox.appendChild(pick);
-
-  // Separador y botón "sin fondo"
-  const sep = document.createElement('span'); sep.className = 'sep'; swBox.appendChild(sep);
-  const bgBtn = document.createElement('button');
-  bgBtn.type = 'button'; bgBtn.className = 'sw'; bgBtn.id = 'bgToggle';
-  bgBtn.title = 'Sacar el fondo'; bgBtn.setAttribute('aria-label', 'Sacar el fondo'); bgBtn.setAttribute('aria-pressed', 'false');
-  bgBtn.onclick = () => {
-    noBg = !noBg;
-    bgBtn.classList.toggle('active', noBg); bgBtn.setAttribute('aria-pressed', noBg);
-    render();
+  const lum = hex => {   // luminancia relativa (WCAG)
+    const ch = i => { const v = parseInt(hex.slice(i, i + 2), 16) / 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+    return .2126 * ch(1) + .7152 * ch(3) + .0722 * ch(5);
   };
-  swBox.appendChild(bgBtn);
+
+  // Arma una fila de círculos: opciones fijas + gotero (cualquier color)
+  function makeRow(label, options, initial, onPick) {
+    const rl = document.createElement('span'); rl.className = 'rl'; rl.textContent = label; swBox.appendChild(rl);
+    const btns = [];
+    const select = b => { btns.forEach(x => x.classList.remove('active')); b.classList.add('active'); };
+    options.forEach((o, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'sw' + (o.cls ? ' ' + o.cls : '') + (i === initial ? ' active' : '');
+      if (o.id) b.id = o.id;
+      if (o.style) b.style.background = o.style;
+      b.title = o.name; b.setAttribute('aria-label', o.name);
+      b.onclick = () => { select(b); onPick(o.value); };
+      btns.push(b); swBox.appendChild(b);
+    });
+    const pick = document.createElement('label');
+    pick.className = 'sw tool'; pick.title = label + ': elegir cualquier color';
+    pick.innerHTML = DROP + '<input type="color" aria-label="' + pick.title + '">';
+    const inp = pick.querySelector('input');
+    inp.value = options[initial].value ? [].concat(options[initial].value)[0] : '#ffffff';
+    inp.addEventListener('input', () => {
+      const v = inp.value;
+      select(pick); pick.style.background = v; pick.style.color = lum(v) > .4 ? '#111827' : '#fff';
+      onPick([v]);
+    });
+    btns.push(pick); swBox.appendChild(pick);
+  }
+
+  const css = c => c.length > 1 ? `linear-gradient(45deg, ${c.join(', ')})` : c[0];
+  makeRow('Puntos', PALETTE.map((c, i) => ({ value: c, style: css(c), name: 'Color ' + (i + 1) })), 0,
+    v => { color = v; paintDot(); render(); });
+  makeRow('Fondo', [
+    { value: null, id: 'noBgBtn', name: 'Sin fondo' },
+    { value: ['#ffffff'], style: '#ffffff', cls: 'white', name: 'Blanco' },
+    { value: ['#000000'], style: '#000000', name: 'Negro' },
+    { value: ['#d1d5db'], style: '#d1d5db', cls: 'lightgray', name: 'Gris' }
+  ], 1, v => { bg = v ? v[0] : null; render(); });
+
   // Agrega un rectángulo redondeado al trazo actual (sin abrir uno nuevo)
   // Barra "Colours": abre y cierra la paleta; el circulito muestra el color elegido
   const toggle = document.getElementById('colorsToggle');
@@ -286,8 +293,8 @@
     const ctx = cv.getContext('2d');
 
     // Tarjeta blanca con bordes redondeados
-    if (!noBg) {
-      ctx.fillStyle = '#fff';
+    if (bg) {
+      ctx.fillStyle = bg;
       roundRect(ctx, 0, 0, W, H, W * 0.06); ctx.fill();
     }
 
@@ -343,6 +350,7 @@
     const text = input.value.trim();
     msg.textContent = '';
     if (!text) {
+      document.body.classList.remove('warn'); msg.classList.remove('warn');
       box.classList.remove('has-qr');
       box.innerHTML = '<div id="placeholder">El QR aparece acá</div>';
       canvas = current = null; btnDownload.disabled = btnShare.disabled = true;
@@ -354,14 +362,20 @@
       qr.addData(unescape(encodeURIComponent(text)), 'Byte');
       qr.make();
     } catch (e) {
-      msg.textContent = 'El texto es demasiado largo para un QR.';
+      msg.classList.remove('warn');       msg.textContent = 'El texto es demasiado largo para un QR.';
       return;
     }
     current = { qr, label: nameInput.value.trim().toUpperCase() };
 
+    // Aviso si los puntos y el fondo se parecen (puede no escanear)
+    const low = bg && color.some(c => { const a = lum(c), b = lum(bg); return (Math.max(a, b) + .05) / (Math.min(a, b) + .05) < 3; });
+    document.body.classList.toggle('warn', !!low);
+    msg.classList.toggle('warn', !!low);
+    if (low) msg.textContent = 'Poco contraste, puede no escanear';
+
     // Vista previa: al tamaño real de la pantalla (ancho visible × densidad de píxeles)
     box.classList.add('has-qr');
-    box.classList.toggle('nobg', noBg);
+    box.classList.toggle('nobg', !bg);
     const cssW = box.clientWidth || 280;
     canvas = drawCard(qr, current.label, cssW * (window.devicePixelRatio || 1));
     canvas.style.width = cssW + 'px';
